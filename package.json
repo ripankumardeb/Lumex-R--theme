@@ -1,0 +1,74 @@
+{
+  "name": "lumex-theme-R",
+  "displayName": "Lumex-R — Theme & Icon Customizer",
+  "description": "A gorgeous default dark/light theme with per-file SVG icons, fully customisable via color names, hex codes, or uploaded PNG/JPG images — with a one-click reset.",
+  "version": "1.0.1",
+  "publisher": "RipanKumarDeb",
+  "icon": "src/icons/lumex-logo.png",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Themes"],
+  "keywords": ["theme", "icon", "dark", "customizer", "beautiful", "lumex"],
+  "repository": { "type": "git", "url": "https://github.com/lumex-theme/lumex-theme" },
+  "license": "MIT",
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "themes": [
+      {
+        "label": "Lumex Dark",
+        "uiTheme": "vs-dark",
+        "path": "./src/themes/lumex-dark-color-theme.json"
+      },
+      {
+        "label": "Lumex Light",
+        "uiTheme": "vs",
+        "path": "./src/themes/lumex-light-color-theme.json"
+      }
+    ],
+    "iconThemes": [
+      {
+        "id": "lumex-icons",
+        "label": "Lumex Icons",
+        "path": "./src/iconTheme/lumex-icons.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "lumex.openCustomizer",
+        "title": "Lumex: Open Theme & Icon Customizer"
+      },
+      {
+        "command": "lumex.resetDefaults",
+        "title": "Lumex: Reset All to Defaults"
+      }
+    ],
+    "configuration": {
+      "title": "Lumex Theme",
+      "properties": {
+        "lumex.defaultVariant": {
+          "type": "string",
+          "default": "dark",
+          "enum": ["dark", "light"],
+          "description": "Default theme variant to apply on first install."
+        },
+        "lumex.enableIconTheme": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically activate Lumex Icons on install."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package --no-dependencies",
+    "build": "npm run compile && npm run package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
+  }
+}
