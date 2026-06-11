@@ -30,6 +30,9 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('lumex.openCustomizer', () => openCustomizerPanel(context)),
     vscode.commands.registerCommand('lumex.resetDefaults',  () => resetToDefaults(context))
   );
+
+  // Rebuild icon theme on activation to ensure custom icons are applied
+  rebuildIconTheme(context).catch(console.error);
 }
 
 export function deactivate() {}
@@ -413,15 +416,17 @@ async function rebuildIconTheme(context: vscode.ExtensionContext) {
 
   // Override with custom images
   for (const [ext, b64] of Object.entries(customIcons)) {
-    const mediaType = b64.startsWith('/9j/') ? 'image/jpeg' : 'image/png';
-    const dataUri = `data:${mediaType};base64,${b64}`;
     // Write to storage path
     const imgPath = path.join(storagePath, `custom_${ext}.png`);
     fs.writeFileSync(imgPath, Buffer.from(b64, 'base64'));
 
     const defKey = `_custom_${ext}`;
-    iconDefs[defKey] = { iconPath: imgPath };
-    if (SPECIAL_FOLDERS.includes(ext)) {
+    const relativePath = path.relative(extSrcRoot, imgPath).replace(/\\/g, '/');
+    iconDefs[defKey] = { iconPath: relativePath };
+
+    if (SPECIAL_FILENAMES.includes(ext)) {
+      fileNames[ext] = defKey;
+    } else if (SPECIAL_FOLDERS.includes(ext)) {
       folderNames[ext] = defKey;
       folderNamesExpanded[ext] = defKey;
     } else {
@@ -440,11 +445,11 @@ async function rebuildIconTheme(context: vscode.ExtensionContext) {
     folderExpanded: '_folder_open',
   };
 
-  const customThemePath = path.join(storagePath, 'lumex-icons-custom.json');
-  fs.writeFileSync(customThemePath, JSON.stringify(customTheme, null, 2));
+  const registeredThemePath = path.join(extSrcRoot, 'lumex-icons.json');
+  fs.writeFileSync(registeredThemePath, JSON.stringify(customTheme, null, 2));
 
   await vscode.workspace.getConfiguration().update(
-    'workbench.iconTheme', customThemePath, vscode.ConfigurationTarget.Global
+    'workbench.iconTheme', 'lumex-icons', vscode.ConfigurationTarget.Global
   );
 }
 
@@ -462,6 +467,31 @@ async function resetToDefaults(context: vscode.ExtensionContext) {
 
   await context.globalState.update('lumex.palette', DEFAULT_DARK_PALETTE);
   await context.globalState.update('lumex.customIcons', {});
+
+  // Clean custom icons from global storage
+  const storagePath = context.globalStorageUri.fsPath;
+  if (fs.existsSync(storagePath)) {
+    try {
+      const files = fs.readdirSync(storagePath);
+      for (const file of files) {
+        if (file.startsWith('custom_')) {
+          fs.unlinkSync(path.join(storagePath, file));
+        }
+      }
+    } catch {}
+  }
+
+  // Restore base theme file
+  const extSrcRoot = path.join(context.extensionUri.fsPath, 'src', 'iconTheme');
+  const baseThemePath = path.join(extSrcRoot, 'lumex-icons-base.json');
+  const registeredThemePath = path.join(extSrcRoot, 'lumex-icons.json');
+  if (fs.existsSync(baseThemePath)) {
+    try {
+      fs.copyFileSync(baseThemePath, registeredThemePath);
+    } catch (err) {
+      console.error('Failed to restore base theme file:', err);
+    }
+  }
 
   const cfg = vscode.workspace.getConfiguration();
   await cfg.update('workbench.colorCustomizations', {}, vscode.ConfigurationTarget.Global);

@@ -1,8 +1,8 @@
 {
-  "name": "lumex-theme-R",
-  "displayName": "Lumex-R — Theme & Icon Customizer",
+  "name": "lumex-theme-r",
+  "displayName": "Lumex — Theme & Icon Customizer",
   "description": "A gorgeous default dark/light theme with per-file SVG icons, fully customisable via color names, hex codes, or uploaded PNG/JPG images — with a one-click reset.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "RipanKumarDeb",
   "icon": "src/icons/lumex-logo.png",
   "engines": { "vscode": "^1.85.0" },
